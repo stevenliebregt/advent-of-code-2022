@@ -1,6 +1,11 @@
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
+#[inline(always)]
+fn is_newline(line: &str) -> bool {
+    line.trim().is_empty()
+}
+
 #[derive(Debug)]
 struct HighestStore {
     values: [i32; 3]
@@ -52,7 +57,7 @@ fn main() {
         }
 
         // Process
-        if buffer == "\r\n" { // TODO: No longer RN in git
+        if is_newline(&buffer) {
             // Flush the current elf and compare to last known max
             store.try_add(current_calories);
 
