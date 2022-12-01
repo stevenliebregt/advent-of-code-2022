@@ -1,13 +1,45 @@
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
+#[derive(Debug)]
+struct HighestStore {
+    values: [i32; 3]
+}
+
+impl HighestStore {
+    pub fn new() -> Self {
+        Self {
+            values: [0; 3]
+        }
+    }
+
+    pub fn try_add(&mut self, value: i32) {
+        for i in 0..3 {
+            if value > self.values[i] {
+                // Shift other values
+                for j in i + 1..3 {
+                    self.values[j] = self.values[i];
+                }
+                self.values[i] = value;
+                return;
+            }
+        }
+    }
+
+    pub fn sum(&self) -> i32 {
+        self.values.iter().sum()
+    }
+}
+
 fn main() {
-    let mut file = File::open("resources/day_1.txt").expect("Could not open input");
+    let file = File::open("resources/day_1.txt").expect("Could not open input");
     let mut reader = BufReader::new(file);
 
     let mut buffer = String::new();
 
-    let mut current_highest = 0;
+    let mut store = HighestStore::new();
+
+    // let mut current_highest = 0;
     let mut current_calories = 0;
 
     loop {
@@ -20,11 +52,9 @@ fn main() {
         }
 
         // Process
-        if buffer == "\r\n" {
+        if buffer == "\r\n" { // TODO: No longer RN in git
             // Flush the current elf and compare to last known max
-            if current_calories > current_highest {
-                current_highest = current_calories;
-            }
+            store.try_add(current_calories);
 
             current_calories = 0;
         } else {
@@ -33,5 +63,5 @@ fn main() {
         }
     }
 
-    println!("Highest = {}", current_highest);
+    println!("Store = {:?} -> sum = {:?}", &store, &store.sum());
 }
