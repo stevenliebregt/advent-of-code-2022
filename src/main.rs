@@ -1,51 +1,22 @@
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+use std::str::FromStr;
 
-#[inline(always)]
-fn is_newline(line: &str) -> bool {
-    line.trim().is_empty()
-}
+mod day01;
 
-#[derive(Debug)]
-struct HighestStore {
-    values: [i32; 3]
-}
-
-impl HighestStore {
-    pub fn new() -> Self {
-        Self {
-            values: [0; 3]
-        }
-    }
-
-    pub fn try_add(&mut self, value: i32) {
-        for i in 0..3 {
-            if value > self.values[i] {
-                // Shift other values
-                for j in i + 1..3 {
-                    self.values[j] = self.values[i];
-                }
-                self.values[i] = value;
-                return;
-            }
-        }
-    }
-
-    pub fn sum(&self) -> i32 {
-        self.values.iter().sum()
-    }
+enum RoundResult {
+    Lose,
+    Tie,
+    Win,
 }
 
 fn main() {
-    let file = File::open("resources/day_1.txt").expect("Could not open input");
+    let file = File::open("resources/day_2.txt").expect("Could not open input");
     let mut reader = BufReader::new(file);
 
     let mut buffer = String::new();
 
-    let mut store = HighestStore::new();
-
-    // let mut current_highest = 0;
-    let mut current_calories = 0;
+    let mut score = 0;
 
     loop {
         buffer.clear();
@@ -56,17 +27,59 @@ fn main() {
             break;
         }
 
-        // Process
-        if is_newline(&buffer) {
-            // Flush the current elf and compare to last known max
-            store.try_add(current_calories);
+        let mut split = buffer.trim().split(' ');
+        let opponent = split.next().unwrap();
+        let you = split.next().unwrap();
 
-            current_calories = 0;
-        } else {
-            // Build elf
-            current_calories += &buffer[..buffer.len() - 2].parse::<i32>().expect("Not a number");
-        }
+        let your_score = match you {
+            "X" =>  1,
+            "Y" => 2,
+            "Z" => 3,
+            _ => unreachable!()
+        };
+
+        score += your_score;
+
+        let round_score = match round_result(opponent, you) {
+            RoundResult::Lose => 0,
+            RoundResult::Tie => 3,
+            RoundResult::Win => 6
+        };
+
+        score += round_score;
     }
 
-    println!("Store = {:?} -> sum = {:?}", &store, &store.sum());
+    dbg!(&score);
+}
+
+fn round_result(opponent: &str, you: &str) -> RoundResult {
+    if opponent == you { // TODO: Only works if strings are parsed into something else, which I probably want to do
+        return RoundResult::Tie;
+    }
+
+    match (opponent, you) {
+        // Rock vs Rock
+        ("A", "X") => RoundResult::Tie,
+        // Rock vs Paper
+        ("A", "Y") => RoundResult::Win,
+        // Rock vs Scissor
+        ("A", "Z") => RoundResult::Lose,
+        // Paper vs Rock
+        ("B", "X") => RoundResult::Lose,
+        // Paper vs Paper
+        ("B", "Y") => RoundResult::Tie,
+        // Paper vs Scissor
+        ("B", "Z") => RoundResult::Win,
+        // Scissor vs Rock
+        ("C", "X") => RoundResult::Win,
+        // Scissor vs Paper
+        ("C", "Y") => RoundResult::Lose,
+        // Scissor vs Scissor
+        ("C", "Z") => RoundResult::Tie,
+        _ => {
+            dbg!(opponent);
+            dbg!(you);
+            unreachable!();
+        }
+    }
 }
