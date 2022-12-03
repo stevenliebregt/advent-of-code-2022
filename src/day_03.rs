@@ -4,6 +4,7 @@ use crate::utils::reader_for_day;
 
 pub fn run() {
     part_1();
+    part_2();
 }
 
 fn part_1() {
@@ -29,6 +30,51 @@ fn part_1() {
     }
 
     dbg!(&score);
+}
+
+fn part_2() {
+    let mut buffer = String::new();
+
+    let mut reader = reader_for_day(3);
+
+    let mut score = 0;
+
+    let mut elves: Vec<Vec<u8>> = Vec::with_capacity(3);
+
+    loop {
+        buffer.clear();
+        if reader.read_line(&mut buffer).unwrap() == 0 {
+            break;
+        }
+
+        let input = buffer.trim();
+        elves.push(input.as_bytes().to_vec());
+
+        if elves.len() == 3 {
+            let badge = find_badge(&elves);
+            score += u8_to_score(&badge);
+            elves.clear();
+        }
+    }
+
+    dbg!(&score);
+}
+
+fn find_badge(rucksacks: &[Vec<u8>]) -> u8 {
+    let a: HashSet<u8> = rucksacks[0].to_vec().into_iter().collect();
+    let b: HashSet<u8> = rucksacks[1].to_vec().into_iter().collect();
+    let c: HashSet<u8> = rucksacks[2].to_vec().into_iter().collect();
+
+    let ab_intersection = a.intersection(&b);
+    let ab: HashSet<u8> = ab_intersection.cloned().collect();
+
+    let abc_intersection = ab.intersection(&c);
+
+    let mut result: Vec<&u8> = abc_intersection.collect();
+
+    assert_eq!(1, result.len());
+
+    result.remove(0).clone()
 }
 
 fn u8_to_score(byte: &u8) -> usize {
