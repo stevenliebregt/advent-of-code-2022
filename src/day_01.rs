@@ -36,8 +36,8 @@ impl HighestStore {
     }
 }
 
-fn main() {
-    let file = File::open("resources/day_1.txt").expect("Could not open input");
+pub fn run() {
+    let file = File::open("resources/day_01.txt").expect("Could not open input");
     let mut reader = BufReader::new(file);
 
     let mut buffer = String::new();
