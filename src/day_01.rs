@@ -1,24 +1,16 @@
-use std::fs::File;
-use std::io::{BufRead, BufReader};
+use crate::utils::LineIterator;
+use aoc_runner_derive::aoc;
+use std::fmt::{Display, Formatter};
 
-#[inline(always)]
-fn is_newline(line: &str) -> bool {
-    line.trim().is_empty()
-}
+type Output = HighestStore;
 
-#[derive(Debug)]
-struct HighestStore {
-    values: [i32; 3]
+#[derive(Default)]
+pub struct HighestStore {
+    values: [i32; 3],
 }
 
 impl HighestStore {
-    pub fn new() -> Self {
-        Self {
-            values: [0; 3]
-        }
-    }
-
-    pub fn try_add(&mut self, value: i32) {
+    fn try_add(&mut self, value: i32) {
         for i in 0..3 {
             if value > self.values[i] {
                 // Shift other values
@@ -31,42 +23,51 @@ impl HighestStore {
         }
     }
 
-    pub fn sum(&self) -> i32 {
+    fn highest(&self) -> &i32 {
+        &self.values[0]
+    }
+
+    fn sum(&self) -> i32 {
         self.values.iter().sum()
     }
 }
 
-pub fn run() {
-    let file = File::open("resources/day_01.txt").expect("Could not open input");
-    let mut reader = BufReader::new(file);
+impl Display for HighestStore {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("HighestStore")
+            .field("highest", &self.highest())
+            .field("sum", &self.sum())
+            .finish()
+    }
+}
 
-    let mut buffer = String::new();
+#[aoc(day1, part1)]
+pub fn solve_part_1(input: &str) -> Output {
+    solve(LineIterator::from(input))
+}
 
-    let mut store = HighestStore::new();
+#[aoc(day1, part2)]
+pub fn solve_part_2(input: &str) -> Output {
+    solve(LineIterator::from(input))
+}
 
-    // let mut current_highest = 0;
-    let mut current_calories = 0;
+fn solve(input: LineIterator) -> HighestStore {
+    let mut store = HighestStore::default();
+    let mut current_elf_calories = 0;
 
-    loop {
-        buffer.clear();
-
-        let bytes_read = reader.read_line(&mut buffer).expect("Failed to read");
-
-        if bytes_read == 0 {
-            break;
+    for line in input {
+        if line.is_empty() {
+            // Flush the current elf and reset calories
+            store.try_add(current_elf_calories);
+            current_elf_calories = 0;
+            continue;
         }
 
-        // Process
-        if is_newline(&buffer) {
-            // Flush the current elf and compare to last known max
-            store.try_add(current_calories);
-
-            current_calories = 0;
-        } else {
-            // Build elf
-            current_calories += &buffer[..buffer.len() - 2].parse::<i32>().expect("Not a number");
-        }
+        current_elf_calories += line.parse::<i32>().expect("Could not parse");
     }
 
-    println!("Store = {:?} -> sum = {:?}", &store, &store.sum());
+    // Flush last elf
+    store.try_add(current_elf_calories);
+
+    store
 }
