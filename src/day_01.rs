@@ -1,12 +1,12 @@
-use std::fmt::{Display, Formatter};
-use aoc_runner_derive::{aoc};
 use crate::utils::LineIterator;
+use aoc_runner_derive::aoc;
+use std::fmt::{Display, Formatter};
 
 type Output = HighestStore;
 
 #[derive(Default)]
 pub struct HighestStore {
-    values: [i32; 3]
+    values: [i32; 3],
 }
 
 impl HighestStore {
@@ -60,7 +60,7 @@ fn solve(input: LineIterator) -> HighestStore {
             // Flush the current elf and reset calories
             store.try_add(current_elf_calories);
             current_elf_calories = 0;
-            continue
+            continue;
         }
 
         current_elf_calories += line.parse::<i32>().expect("Could not parse");
