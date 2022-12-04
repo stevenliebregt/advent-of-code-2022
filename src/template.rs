@@ -24,7 +24,7 @@ mod tests {
 
         let expected = 1;
 
-        assert_eq!(expected, solve_part_1(input));
+        assert_eq!(expected, solve_part_1(input.trim()));
     }
 
     #[test]
@@ -35,6 +35,6 @@ mod tests {
 
         let expected = 1;
 
-        assert_eq!(expected, solve_part_2(input));
+        assert_eq!(expected, solve_part_2(input.trim()));
     }
 }

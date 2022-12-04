@@ -11,15 +11,19 @@ pub struct HighestStore {
 
 impl HighestStore {
     fn try_add(&mut self, value: i32) {
-        for i in 0..3 {
-            if value > self.values[i] {
-                // Shift other values
-                for j in i + 1..3 {
-                    self.values[j] = self.values[i];
-                }
-                self.values[i] = value;
-                return;
-            }
+        if value < self.values[2] {
+            return; // No chance
+        }
+
+        if value > self.values[0] {
+            self.values[2] = self.values[1];
+            self.values[1] = self.values[0];
+            self.values[0] = value;
+        } else if value > self.values[1] {
+            self.values[2] = self.values[1];
+            self.values[1] = value;
+        } else if value > self.values[2] {
+            self.values[2] = value;
         }
     }
 
@@ -70,4 +74,57 @@ fn solve(input: LineIterator) -> HighestStore {
     store.try_add(current_elf_calories);
 
     store
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_part_1() {
+        let input = r#"
+1000
+2000
+3000
+
+4000
+
+5000
+6000
+
+7000
+8000
+9000
+
+10000
+        "#;
+
+        let expected = &24000;
+
+        assert_eq!(expected, solve_part_1(input.trim()).highest());
+    }
+
+    #[test]
+    fn test_part_2() {
+        let input = r#"
+1000
+2000
+3000
+
+4000
+
+5000
+6000
+
+7000
+8000
+9000
+
+10000
+        "#;
+
+        let expected = 45000;
+
+        assert_eq!(expected, solve_part_2(input.trim()).sum());
+    }
 }

@@ -36,7 +36,7 @@ impl Assignment {
     #[inline(always)]
     fn has_overlap_with(&self, other: &Self) -> bool {
         (self.start <= other.start && self.end >= other.start)
-        || (other.start <= self.start && other.end >= self.start)
+            || (other.start <= self.start && other.end >= self.start)
     }
 }
 
@@ -49,10 +49,7 @@ impl FromStr for Assignment {
         let start: usize = split.next().unwrap().parse().unwrap();
         let end: usize = split.next().unwrap().parse().unwrap();
 
-        Ok(Self {
-            start,
-            end,
-        })
+        Ok(Self { start, end })
     }
 }
 
@@ -94,7 +91,7 @@ pub fn solve_part_2(input: &str) -> Output {
 mod tests {
     use super::*;
 
-    parameterized_test::create!{ test_assignment_contained_one_way_or_another, input, {
+    parameterized_test::create! { test_assignment_contained_one_way_or_another, input, {
         assert_eq!(input.2, input.0.contained_one_way_or_another(&input.1))
     }}
 
@@ -121,7 +118,7 @@ mod tests {
         ),
     }
 
-    parameterized_test::create!{ test_assignment_has_overlap_with, input, {
+    parameterized_test::create! { test_assignment_has_overlap_with, input, {
         assert_eq!(input.2, input.0.has_overlap_with(&input.1))
     }}
 
