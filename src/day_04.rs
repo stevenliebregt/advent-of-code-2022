@@ -9,11 +9,29 @@ type Output = usize;
 struct Assignment(RangeInclusive<usize>);
 
 impl Assignment {
+    /// Checks whether the current assignment fully contains the other assignment, or the other
+    /// way around.
+    ///
+    /// In this example `self` fully contains `other``:
+    /// ```md
+    /// .2345678.
+    /// ...456...
+    /// ```
+    ///
+    /// In this example `other` fully contains `self`:
+    /// ```md
+    /// ....56...
+    /// ...4567..
+    /// ```
+    ///
+    #[inline]
     fn contained_one_way_or_another(&self, other: &Self) -> bool {
         (self.0.contains(&other.0.start()) && self.0.contains(&other.0.end()))
             || (other.0.contains(&self.0.start()) && other.0.contains(&self.0.end()))
     }
 
+    /// Checks whether the current assignment has any overlap with the other assignment
+    #[inline]
     fn has_overlap_with(&self, other: &Self) -> bool {
         self.0.contains(&other.0.start())
             || self.0.contains(&other.0.end())
@@ -25,6 +43,7 @@ impl Assignment {
 impl FromStr for Assignment {
     type Err = String;
 
+    #[inline]
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut split = s.split('-');
         let from: usize = split.next().unwrap().parse().unwrap();
@@ -49,6 +68,17 @@ pub fn solve_part_1(input: &str) -> Output {
     }
 
     count
+}
+
+#[aoc(day4, part1, alt="iter")]
+pub fn solve_part_1_alt_iter(input: &str) -> Output {
+    LineIterator::from(input).filter(|pair| {
+        let mut split = pair.split(',');
+        let assignment_a: Assignment = split.next().unwrap().parse().unwrap();
+        let assignment_b: Assignment = split.next().unwrap().parse().unwrap();
+
+        assignment_a.contained_one_way_or_another(&assignment_b)
+    }).count()
 }
 
 #[aoc(day4, part2)]
