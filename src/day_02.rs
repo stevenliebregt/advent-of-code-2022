@@ -128,3 +128,28 @@ fn round_result(opponent: &Hand, you: &Hand) -> RoundResult {
 
     RoundResult::Win
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const INPUT: &str = r#"
+A Y
+B X
+C Z
+    "#;
+
+    #[test]
+    fn test_part_1() {
+        let expected = 15;
+
+        assert_eq!(expected, solve_part_1(INPUT.trim()));
+    }
+
+    #[test]
+    fn test_part_2() {
+        let expected = 12;
+
+        assert_eq!(expected, solve_part_2(INPUT.trim()));
+    }
+}

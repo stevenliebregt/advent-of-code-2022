@@ -106,3 +106,31 @@ fn find_badge(elves: &[Vec<u8>]) -> &u8 {
         .find(|byte| elves[1..].iter().all(|rucksack| rucksack.contains(byte)))
         .expect("No common")
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const INPUT: &str = r#"
+vJrwpWtwJgWrhcsFMMfFFhFp
+jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL
+PmmdzqPrVvPwwTWBwg
+wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn
+ttgJtRGJQctTZtZT
+CrZsJsPPZsGzwwsLwLmpwMDw
+    "#;
+
+    #[test]
+    fn test_part_1() {
+        let expected = 157;
+
+        assert_eq!(expected, solve_part_1(INPUT.trim()));
+    }
+
+    #[test]
+    fn test_part_2() {
+        let expected = 70;
+
+        assert_eq!(expected, solve_part_2(INPUT.trim()));
+    }
+}

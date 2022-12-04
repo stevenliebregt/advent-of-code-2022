@@ -16,25 +16,21 @@ pub fn solve_part_2(input: &str) -> Output {
 mod tests {
     use super::*;
 
+    const INPUT: &str = r#"
+
+    "#;
+
     #[test]
     fn test_part_1() {
-        let input = r#"
-
-        "#;
-
         let expected = 1;
 
-        assert_eq!(expected, solve_part_1(input.trim()));
+        assert_eq!(expected, solve_part_1(INPUT.trim()));
     }
 
     #[test]
     fn test_part_2() {
-        let input = r#"
-
-        "#;
-
         let expected = 1;
 
-        assert_eq!(expected, solve_part_2(input.trim()));
+        assert_eq!(expected, solve_part_2(INPUT.trim()));
     }
 }
