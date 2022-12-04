@@ -1,12 +1,13 @@
 use crate::utils::LineIterator;
 use aoc_runner_derive::aoc;
-use std::ops::RangeInclusive;
 use std::str::FromStr;
 
 type Output = usize;
 
-#[derive(Debug)]
-struct Assignment(RangeInclusive<usize>);
+struct Assignment {
+    start: usize,
+    end: usize,
+}
 
 impl Assignment {
     /// Checks whether the current assignment fully contains the other assignment, or the other
@@ -23,33 +24,35 @@ impl Assignment {
     /// ....56...
     /// ...4567..
     /// ```
-    ///
-    #[inline]
+    #[inline(always)]
     fn contained_one_way_or_another(&self, other: &Self) -> bool {
-        (self.0.contains(&other.0.start()) && self.0.contains(&other.0.end()))
-            || (other.0.contains(&self.0.start()) && other.0.contains(&self.0.end()))
+        // Check if we contain other
+        (self.start <= other.start && self.end >= other.end)
+        // And other way around
+        || (other.start <= self.start && other.end >= self.end)
     }
 
     /// Checks whether the current assignment has any overlap with the other assignment
-    #[inline]
+    #[inline(always)]
     fn has_overlap_with(&self, other: &Self) -> bool {
-        self.0.contains(&other.0.start())
-            || self.0.contains(&other.0.end())
-            || other.0.contains(&self.0.start())
-            || other.0.contains(&self.0.end())
+        (self.start <= other.start && self.end >= other.start)
+        || (other.start <= self.start && other.end >= self.start)
     }
 }
 
 impl FromStr for Assignment {
     type Err = String;
 
-    #[inline]
+    #[inline(always)]
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut split = s.split('-');
-        let from: usize = split.next().unwrap().parse().unwrap();
-        let to: usize = split.next().unwrap().parse().unwrap();
+        let start: usize = split.next().unwrap().parse().unwrap();
+        let end: usize = split.next().unwrap().parse().unwrap();
 
-        Ok(Self(from..=to))
+        Ok(Self {
+            start,
+            end,
+        })
     }
 }
 
@@ -68,17 +71,6 @@ pub fn solve_part_1(input: &str) -> Output {
     }
 
     count
-}
-
-#[aoc(day4, part1, alt="iter")]
-pub fn solve_part_1_alt_iter(input: &str) -> Output {
-    LineIterator::from(input).filter(|pair| {
-        let mut split = pair.split(',');
-        let assignment_a: Assignment = split.next().unwrap().parse().unwrap();
-        let assignment_b: Assignment = split.next().unwrap().parse().unwrap();
-
-        assignment_a.contained_one_way_or_another(&assignment_b)
-    }).count()
 }
 
 #[aoc(day4, part2)]
@@ -101,6 +93,71 @@ pub fn solve_part_2(input: &str) -> Output {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    parameterized_test::create!{ test_assignment_contained_one_way_or_another, input, {
+        assert_eq!(input.2, input.0.contained_one_way_or_another(&input.1))
+    }}
+
+    test_assignment_contained_one_way_or_another! {
+        contained: (
+            Assignment { start: 3, end: 8 },
+            Assignment { start: 4, end: 6 },
+            true
+        ),
+        not_contained: (
+            Assignment { start: 5, end: 8 },
+            Assignment { start: 4, end: 6 },
+            false
+        ),
+        contained_reverse: (
+            Assignment { start: 4, end: 6 },
+            Assignment { start: 3, end: 8 },
+            true
+        ),
+        not_contained_reverse: (
+            Assignment { start: 4, end: 6 },
+            Assignment { start: 5, end: 8 },
+            false
+        ),
+    }
+
+    parameterized_test::create!{ test_assignment_has_overlap_with, input, {
+        assert_eq!(input.2, input.0.has_overlap_with(&input.1))
+    }}
+
+    test_assignment_has_overlap_with! {
+        // ..34567..
+        // ...45678.
+        overlaps: (
+            Assignment { start: 3, end: 7 },
+            Assignment { start: 4, end: 8 },
+            true
+        ),
+        // ...45678.
+        // ..34567..
+        overlaps_reverse: (
+            Assignment { start: 4, end: 8 },
+            Assignment { start: 3, end: 7 },
+            true
+        ),
+        // .234.....
+        // ...4567..
+        overlaps_only_single: (
+            Assignment { start: 2, end: 4 },
+            Assignment { start: 4, end: 7 },
+            true
+        ),
+        no_overlap: (
+            Assignment { start: 2, end: 4 },
+            Assignment { start: 5, end: 7 },
+            false
+        ),
+        no_overlap_reversee: (
+            Assignment { start: 5, end: 7 },
+            Assignment { start: 2, end: 4 },
+            false
+        ),
+    }
 
     #[test]
     fn test_part_1() {

@@ -8,6 +8,7 @@ version = "0.1.0"
 dependencies = [
  "aoc-runner",
  "aoc-runner-derive",
+ "parameterized_test",
 ]
 
 [[package]]
@@ -44,6 +45,12 @@ name = "itoa"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4217ad341ebadf8d8e724e264f13e593e0648f5b3e94b3896a5df283be015ecc"
+
+[[package]]
+name = "parameterized_test"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f1fc5322b3eee32612f95d7740ca559b42251f3ba6e29862bbf6f1ea854751df"
 
 [[package]]
 name = "proc-macro2"
