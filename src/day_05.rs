@@ -24,8 +24,6 @@ impl CargoHold {
     pub fn move_crates(&mut self, amount: usize, from: usize, to: usize) {
         let mut temp: Vec<u8> = Vec::default();
 
-        // println!("\t: move {:?} from {:?} to {:?}", amount, from, to);
-
         {
             let origin = self.stacks.get_mut(&from).expect("No origin");
 
@@ -36,8 +34,6 @@ impl CargoHold {
         }
 
         self.stacks.entry(to).and_modify(|v| v.extend(temp));
-
-        // dbg!(&self);
     }
 
     pub fn move_crates_at_once(&mut self, amount: usize, from: usize, to: usize) {
@@ -106,11 +102,7 @@ pub fn solve_part_1(input: &str) -> Output {
         }
     }
 
-    dbg!(&cargo_hold);
-
     for line in LineIterator::from(move_operations) {
-        println!("Line = {:?}", line);
-
         let matches = MOVE_OP_REGEX.captures(line).unwrap();
         let amount: usize = matches.name("amount").unwrap().as_str().parse().unwrap();
         let from: usize = matches.name("from").unwrap().as_str().parse().unwrap();
@@ -142,11 +134,7 @@ pub fn solve_part_2(input: &str) -> Output {
         }
     }
 
-    dbg!(&cargo_hold);
-
     for line in LineIterator::from(move_operations) {
-        println!("Line = {:?}", line);
-
         let matches = MOVE_OP_REGEX.captures(line).unwrap();
         let amount: usize = matches.name("amount").unwrap().as_str().parse().unwrap();
         let from: usize = matches.name("from").unwrap().as_str().parse().unwrap();
