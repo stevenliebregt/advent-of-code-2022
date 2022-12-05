@@ -1,29 +1,32 @@
 pub enum TrimMode {
     All,
     LineEndOnly,
-    None
+    None,
 }
 
 pub struct LineIteratorSettings {
-    pub(crate) trim_mode: TrimMode
+    pub(crate) trim_mode: TrimMode,
 }
 
 impl Default for LineIteratorSettings {
     fn default() -> Self {
         Self {
-            trim_mode: TrimMode::All
+            trim_mode: TrimMode::All,
         }
     }
 }
 
 pub struct LineIterator<'a> {
     input: &'a str,
-    settings: LineIteratorSettings
+    settings: LineIteratorSettings,
 }
 
 impl<'a> LineIterator<'a> {
     pub fn from(input: &'a str) -> Self {
-        Self { input, settings: LineIteratorSettings::default() }
+        Self {
+            input,
+            settings: LineIteratorSettings::default(),
+        }
     }
 
     pub fn from_settings(input: &'a str, settings: LineIteratorSettings) -> Self {
@@ -50,9 +53,9 @@ impl<'a> Iterator for LineIterator<'a> {
         self.input = rest;
 
         match self.settings.trim_mode {
-            TrimMode::All =>  Some(line.trim()),
+            TrimMode::All => Some(line.trim()),
             TrimMode::LineEndOnly => Some(line.trim_end_matches(['\r', '\n'])),
-            TrimMode::None => Some(line)
+            TrimMode::None => Some(line),
         }
     }
 }

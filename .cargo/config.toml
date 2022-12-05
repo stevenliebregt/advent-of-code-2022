@@ -1,0 +1,4 @@
+# For more config options see: https://doc.rust-lang.org/cargo/reference/config.html
+
+[build]
+rustflags = ["-A", "dead_code"]

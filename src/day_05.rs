@@ -1,61 +1,62 @@
-use std::collections::{HashMap, VecDeque};
-use std::fmt::{Debug, Formatter};
-use aoc_runner_derive::aoc;
-use once_cell::sync::Lazy;
-use regex::Regex;
 use crate::utils::{LineIterator, LineIteratorSettings, TrimMode};
-
-const MOVE_OP_PATTERN: &str = r#"move (?P<amount>\d+) from (?P<from>\d+) to (?P<to>\d+)"#;
-static MOVE_OP_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(MOVE_OP_PATTERN).unwrap());
+use aoc_runner_derive::aoc;
+use std::collections::VecDeque;
+use std::fmt::{Debug, Formatter};
+use std::str::FromStr;
 
 type Output = String;
 
 #[derive(Default)]
 struct CargoHold {
-    stacks: HashMap<usize, VecDeque<u8>>
+    stacks: Vec<VecDeque<u8>>,
 }
 
 impl CargoHold {
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self {
+            stacks: vec![VecDeque::default(); capacity],
+        }
+    }
+
     pub fn add_to_stack(&mut self, identifier: usize, value: u8) {
-        let stack = self.stacks.entry(identifier).or_insert_with(|| VecDeque::default());
-        stack.push_front(value);
+        self.stacks[identifier].push_front(value);
     }
 
-    pub fn move_crates(&mut self, amount: usize, from: usize, to: usize) {
-        let mut temp: Vec<u8> = Vec::default();
+    fn operate_9000(&mut self, operation: MoveOperation) {
+        let mut temporary: Vec<u8> = Vec::with_capacity(operation.amount);
 
+        // Fill temporary
         {
-            let origin = self.stacks.get_mut(&from).expect("No origin");
+            let stack = &mut self.stacks[operation.from];
 
-            for _ in 0..amount {
-                let value = origin.pop_back().expect("Could not pop");
-                temp.push(value);
+            for _ in 0..operation.amount {
+                temporary.push(stack.pop_back().unwrap());
             }
         }
 
-        self.stacks.entry(to).and_modify(|v| v.extend(temp));
+        self.stacks[operation.to].extend(temporary);
     }
 
-    pub fn move_crates_at_once(&mut self, amount: usize, from: usize, to: usize) {
-        let mut temp: VecDeque<u8> = VecDeque::default();
+    fn operate_9001(&mut self, operation: MoveOperation) {
+        let mut temporary: VecDeque<u8> = VecDeque::with_capacity(operation.amount);
 
+        // Fill temporary
         {
-            let origin = self.stacks.get_mut(&from).expect("No origin");
+            let stack = &mut self.stacks[operation.from];
 
-            for _ in 0..amount {
-                let value = origin.pop_back().expect("Could not pop");
-                temp.push_front(value);
+            for _ in 0..operation.amount {
+                temporary.push_front(stack.pop_back().unwrap());
             }
         }
 
-        self.stacks.entry(to).and_modify(|v| v.extend(temp));
+        self.stacks[operation.to].extend(temporary);
     }
 
     pub fn get_tops(&self) -> String {
         let mut output = String::with_capacity(self.stacks.len());
 
-        for i in 0..self.stacks.len() {
-            output.push(self.stacks.get(&i).unwrap().back().unwrap().clone() as char);
+        for stack in &self.stacks {
+            output.push(stack.back().unwrap().clone() as char);
         }
 
         output
@@ -66,19 +67,70 @@ impl Debug for CargoHold {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut debug = f.debug_struct("CargoHold");
 
-        let debug_format_line = |index: usize| {
-            let mut string = String::new();
-            for b in self.stacks.get(&index).unwrap() {
-                string.push_str(&format!("[{}] ", std::str::from_utf8(&[b.clone()]).unwrap()));
-            }
-            string
-        };
+        for (id, stack) in self.stacks.iter().enumerate() {
+            debug.field(
+                &format!("{}", id),
+                &{
+                    let mut string = String::new();
 
-        for i in 0..self.stacks.len() {
-            debug.field(&format!("{}", i), &debug_format_line(i));
+                    for value in stack {
+                        string.push_str(&format!(
+                            "[{}] ",
+                            std::str::from_utf8(&[value.clone()]).unwrap()
+                        ))
+                    }
+
+                    string
+                }
+                .trim(),
+            );
         }
 
         debug.finish()
+    }
+}
+
+struct MoveOperation {
+    amount: usize,
+    from: usize,
+    to: usize,
+}
+
+impl FromStr for MoveOperation {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let split = s.split(' ').collect::<Vec<_>>();
+
+        Ok(Self {
+            amount: split[1].parse::<usize>().unwrap(),
+            from: split[3].parse::<usize>().unwrap() - 1,
+            to: split[5].parse::<usize>().unwrap() - 1,
+        })
+    }
+}
+
+struct MoveOperationIterator<'a> {
+    lines: LineIterator<'a>,
+}
+
+impl<'a> MoveOperationIterator<'a> {
+    fn new(input: &'a str) -> Self {
+        MoveOperationIterator {
+            lines: LineIterator::from(input),
+        }
+    }
+}
+
+impl Iterator for MoveOperationIterator<'_> {
+    type Item = MoveOperation;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(line) = self.lines.next() {
+            Some(line.parse::<MoveOperation>().expect("Not a move operation"))
+        } else {
+            None
+        }
     }
 }
 
@@ -87,29 +139,13 @@ pub fn solve_part_1(input: &str) -> Output {
     let starting_pos = input.find("move").expect("No move operations?");
     let (initial_state, move_operations) = input.split_at(starting_pos);
 
-    let mut cargo_hold = CargoHold::default();
+    let mut cargo_hold = initialize_cargo_hold(initial_state);
 
-    // Parse initial state
-    for line in LineIterator::from_settings(initial_state, LineIteratorSettings { trim_mode: TrimMode::LineEndOnly }) {
-        if line.trim().starts_with('1') {
-            break;
-        }
-
-        for (index, byte) in line.bytes().enumerate() {
-            if byte >= b'A' && byte <= b'Z' { // Is a crate
-                cargo_hold.add_to_stack(index / 4, byte);
-            }
-        }
+    for operation in MoveOperationIterator::new(move_operations) {
+        cargo_hold.operate_9000(operation);
     }
 
-    for line in LineIterator::from(move_operations) {
-        let matches = MOVE_OP_REGEX.captures(line).unwrap();
-        let amount: usize = matches.name("amount").unwrap().as_str().parse().unwrap();
-        let from: usize = matches.name("from").unwrap().as_str().parse().unwrap();
-        let to: usize = matches.name("to").unwrap().as_str().parse().unwrap();
-
-        cargo_hold.move_crates(amount, from - 1, to - 1);
-    }
+    dbg!(&cargo_hold);
 
     cargo_hold.get_tops()
 }
@@ -119,39 +155,51 @@ pub fn solve_part_2(input: &str) -> Output {
     let starting_pos = input.find("move").expect("No move operations?");
     let (initial_state, move_operations) = input.split_at(starting_pos);
 
-    let mut cargo_hold = CargoHold::default();
+    let mut cargo_hold = initialize_cargo_hold(initial_state);
+
+    for operation in MoveOperationIterator::new(move_operations) {
+        cargo_hold.operate_9001(operation);
+    }
+
+    cargo_hold.get_tops()
+}
+
+#[inline(always)]
+fn initialize_cargo_hold(initialization: &str) -> CargoHold {
+    // Let find longest line first (probably faster than bounds checking each time)
+    let longest_line_length = LineIterator::from(initialization)
+        .map(|line| line.len() / 4)
+        .max()
+        .unwrap();
+    let mut cargo_hold = CargoHold::with_capacity(longest_line_length + 1);
 
     // Parse initial state
-    for line in LineIterator::from_settings(initial_state, LineIteratorSettings { trim_mode: TrimMode::LineEndOnly }) {
+    for line in LineIterator::from_settings(
+        initialization,
+        LineIteratorSettings {
+            trim_mode: TrimMode::LineEndOnly,
+        },
+    ) {
         if line.trim().starts_with('1') {
             break;
         }
 
         for (index, byte) in line.bytes().enumerate() {
-            if byte >= b'A' && byte <= b'Z' { // Is a crate
+            if byte >= b'A' && byte <= b'Z' {
+                // Is a crate
                 cargo_hold.add_to_stack(index / 4, byte);
             }
         }
     }
 
-    for line in LineIterator::from(move_operations) {
-        let matches = MOVE_OP_REGEX.captures(line).unwrap();
-        let amount: usize = matches.name("amount").unwrap().as_str().parse().unwrap();
-        let from: usize = matches.name("from").unwrap().as_str().parse().unwrap();
-        let to: usize = matches.name("to").unwrap().as_str().parse().unwrap();
-
-        cargo_hold.move_crates_at_once(amount, from - 1, to - 1);
-    }
-
-    cargo_hold.get_tops()
+    cargo_hold
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    const INPUT: &str =
-        r#"    [D]
+    const INPUT: &str = r#"    [D]
 [N] [C]
 [Z] [M] [P]
  1   2   3
