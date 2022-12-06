@@ -1,78 +1,37 @@
 use aoc_runner_derive::aoc;
-use std::collections::HashSet;
 
 type Output = usize;
 
-#[derive(Default, Debug)]
-struct StartOfPacket {
-    buffer: Vec<u8>,
-}
-
-impl StartOfPacket {
-    fn add(&mut self, value: u8) {
-        if self.buffer.len() < 4 {
-            self.buffer.push(value);
-        } else {
-            // TODO: Ew
-            self.buffer.remove(0);
-            self.buffer.push(value);
-        }
-    }
-
-    fn complete(&self) -> bool {
-        self.buffer.len() == 4 && HashSet::<&u8>::from_iter(&mut self.buffer.iter()).len() == 4
-    }
-}
-
-#[derive(Default, Debug)]
-struct StartOfMessage {
-    buffer: Vec<u8>,
-}
-
-impl StartOfMessage {
-    fn add(&mut self, value: u8) {
-        if self.buffer.len() < 14 {
-            self.buffer.push(value);
-        } else {
-            // TODO: Ew
-            self.buffer.remove(0);
-            self.buffer.push(value);
-        }
-    }
-
-    fn complete(&self) -> bool {
-        self.buffer.len() == 14 && HashSet::<&u8>::from_iter(&mut self.buffer.iter()).len() == 14
-    }
-}
-
 #[aoc(day6, part1)]
 pub fn solve_part_1(input: &str) -> Output {
-    let mut start_packet = StartOfPacket::default();
-
-    for (index, byte) in input.as_bytes().iter().enumerate() {
-        start_packet.add(byte.clone());
-
-        if start_packet.complete() {
-            return index + 1;
-        }
-    }
-
-    panic!("No solution")
+    find_packet_position(input, 4)
 }
 
 #[aoc(day6, part2)]
 pub fn solve_part_2(input: &str) -> Output {
-    let mut start_packet = StartOfMessage::default();
+    find_packet_position(input, 14)
+}
 
-    for (index, byte) in input.as_bytes().iter().enumerate() {
-        start_packet.add(byte.clone());
+fn find_packet_position(input: &str, packet_size: usize) -> usize {
+    input
+        .as_bytes()
+        .windows(packet_size)
+        .position(|window: &[u8]| all_unique_bytes(window))
+        .expect("No solution")
+        + packet_size
+}
 
-        if start_packet.complete() {
-            return index + 1;
+fn all_unique_bytes(mut bytes: &[u8]) -> bool {
+    // Keep splitting first char
+    while let Some((first, rest)) = bytes.split_first() {
+        if rest.contains(first) {
+            return false;
         }
+
+        bytes = rest;
     }
 
-    panic!("No solution")
+    true
 }
 
 #[cfg(test)]
