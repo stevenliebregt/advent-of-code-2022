@@ -16,7 +16,7 @@ fn find_packet_position(input: &str, packet_size: usize) -> usize {
     input
         .as_bytes()
         .windows(packet_size)
-        .position(|window: &[u8]| all_unique_bytes(window))
+        .position(all_unique_bytes)
         .expect("No solution")
         + packet_size
 }

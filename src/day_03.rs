@@ -12,7 +12,7 @@ pub fn solve_part_1(input: &str) -> Output {
         let compartment_a = &line[..line.len() / 2];
         let compartment_b = &line[line.len() / 2..];
 
-        let duplicate = find_duplicate(&compartment_a.as_bytes(), &compartment_b.as_bytes());
+        let duplicate = find_duplicate(compartment_a.as_bytes(), compartment_b.as_bytes());
         score += u8_to_priority(duplicate);
     }
 
@@ -27,7 +27,7 @@ pub fn solve_part_1_alt(input: &str) -> Output {
         let compartment_a = &line[..line.len() / 2];
         let compartment_b = &line[line.len() / 2..];
 
-        let duplicate = find_duplicate_iter(&compartment_a.as_bytes(), &compartment_b.as_bytes());
+        let duplicate = find_duplicate_iter(compartment_a.as_bytes(), compartment_b.as_bytes());
         score += u8_to_priority(duplicate);
     }
 
@@ -75,7 +75,7 @@ pub fn solve_part_2_alt(input: &str) -> Output {
 
 fn find_duplicate<'b>(a: &[u8], b: &'b [u8]) -> &'b u8 {
     // TODO: Rethink this (after benching, yeah this is a bad idea)
-    let pile: HashSet<&u8> = a.into_iter().collect();
+    let pile: HashSet<&u8> = a.iter().collect();
 
     for byte in b {
         if pile.contains(byte) {
@@ -94,8 +94,8 @@ fn find_duplicate_iter<'a>(a: &'a [u8], b: &[u8]) -> &'a u8 {
 
 fn u8_to_priority(byte: &u8) -> usize {
     match byte {
-        x if x >= &b'A' && x <= &b'Z' => ((x - b'A') + 27) as usize,
-        x if x >= &b'a' && x <= &b'z' => ((x - b'a') + 1) as usize,
+        x if (&b'A'..=&b'Z').contains(&x) => ((x - b'A') + 27) as usize,
+        x if (&b'a'..=&b'z').contains(&x) => ((x - b'a') + 1) as usize,
         _ => unreachable!(),
     }
 }

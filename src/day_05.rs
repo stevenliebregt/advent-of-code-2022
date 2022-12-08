@@ -56,7 +56,7 @@ impl CargoHold {
         let mut output = String::with_capacity(self.stacks.len());
 
         for stack in &self.stacks {
-            output.push(stack.back().unwrap().clone() as char);
+            output.push(*stack.back().unwrap() as char);
         }
 
         output
@@ -69,15 +69,12 @@ impl Debug for CargoHold {
 
         for (id, stack) in self.stacks.iter().enumerate() {
             debug.field(
-                &format!("{}", id),
+                &format!("{id}"),
                 &{
                     let mut string = String::new();
 
                     for value in stack {
-                        string.push_str(&format!(
-                            "[{}] ",
-                            std::str::from_utf8(&[value.clone()]).unwrap()
-                        ))
+                        string.push_str(&format!("[{}] ", std::str::from_utf8(&[*value]).unwrap()))
                     }
 
                     string
@@ -126,11 +123,9 @@ impl Iterator for MoveOperationIterator<'_> {
     type Item = MoveOperation;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if let Some(line) = self.lines.next() {
-            Some(line.parse::<MoveOperation>().expect("Not a move operation"))
-        } else {
-            None
-        }
+        self.lines
+            .next()
+            .map(|line| line.parse::<MoveOperation>().expect("Not a move operation"))
     }
 }
 
@@ -185,7 +180,7 @@ fn initialize_cargo_hold(initialization: &str) -> CargoHold {
         }
 
         for (index, byte) in line.bytes().enumerate() {
-            if byte >= b'A' && byte <= b'Z' {
+            if (b'A'..=b'Z').contains(&byte) {
                 // Is a crate
                 cargo_hold.add_to_stack(index / 4, byte);
             }

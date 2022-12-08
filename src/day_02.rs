@@ -38,7 +38,7 @@ impl Hand {
             &b'A' | &b'X' => Hand::Rock,
             &b'B' | &b'Y' => Hand::Paper,
             &b'C' | &b'Z' => Hand::Scissors,
-            _ => panic!("Invalid byte input: {:?}", byte),
+            _ => panic!("Invalid byte input: {byte:?}"),
         }
     }
 
@@ -93,13 +93,13 @@ pub fn solve_part_2(input: &str) -> Output {
 
     iterate(LineIterator::from(input), |opponent, guide| {
         let opponent_hand = Hand::from(opponent);
-        let (your_hand, round_score) = match guide {
+        let (your_hand, round_score) = match *guide {
             // Need to lose
-            &b'X' => (opponent_hand.wins_against(), 0),
+            b'X' => (opponent_hand.wins_against(), 0),
             // Need to tie
-            &b'Y' => (opponent_hand.clone(), 3),
+            b'Y' => (opponent_hand, 3),
             // Need to win
-            &b'Z' => (opponent_hand.loses_against(), 6),
+            b'Z' => (opponent_hand.loses_against(), 6),
             _ => unreachable!(),
         };
 
