@@ -3,6 +3,11 @@
 version = 3
 
 [[package]]
+name = "advent-of-code-helpers"
+version = "0.1.0"
+source = "git+https://github.com/stevenliebregt/advent-of-code-helpers#cf94ddca691f63b42f5ca6f547795d63a24de5bb"
+
+[[package]]
 name = "aho-corasick"
 version = "0.7.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -15,6 +20,7 @@ dependencies = [
 name = "aoc-2022"
 version = "0.1.0"
 dependencies = [
+ "advent-of-code-helpers",
  "aoc-runner",
  "aoc-runner-derive",
  "once_cell",

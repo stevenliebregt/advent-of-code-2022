@@ -1,3 +1,7 @@
+use std::fmt::Debug;
+use std::marker::PhantomData;
+use std::str::FromStr;
+
 pub enum TrimMode {
     All,
     LineEndOnly,
@@ -37,7 +41,7 @@ impl<'a> LineIterator<'a> {
 impl<'a> Iterator for LineIterator<'a> {
     type Item = &'a str;
 
-    #[inline]
+    #[inline] // TODO: Does this matter?
     fn next(&mut self) -> Option<Self::Item> {
         if self.input.is_empty() {
             return None;
@@ -57,5 +61,42 @@ impl<'a> Iterator for LineIterator<'a> {
             TrimMode::LineEndOnly => Some(line.trim_end_matches(['\r', '\n'])),
             TrimMode::None => Some(line),
         }
+    }
+}
+
+pub struct ParsingLineIterator<'a, T> {
+    line_iterator: LineIterator<'a>,
+    marker: PhantomData<T>,
+}
+
+impl<'a, T> ParsingLineIterator<'a, T> {
+    pub fn from(input: &'a str) -> Self {
+        Self {
+            line_iterator: LineIterator::from(input),
+            marker: Default::default(),
+        }
+    }
+
+    pub fn from_settings(input: &'a str, settings: LineIteratorSettings) -> Self {
+        Self {
+            line_iterator: LineIterator::from_settings(input, settings),
+            marker: Default::default(),
+        }
+    }
+}
+
+impl<'a, T> Iterator for ParsingLineIterator<'a, T>
+where
+    T: FromStr,
+    <T as FromStr>::Err: Debug,
+{
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(line) = self.line_iterator.next() {
+            return Some(line.parse::<T>().unwrap());
+        }
+
+        None
     }
 }
