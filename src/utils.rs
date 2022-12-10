@@ -85,6 +85,15 @@ impl<'a, T> ParsingLineIterator<'a, T> {
     }
 }
 
+impl<'a, T> From<LineIterator<'a>> for ParsingLineIterator<'a, T> {
+    fn from(line_iterator: LineIterator<'a>) -> Self {
+        Self {
+            line_iterator,
+            marker: PhantomData::<T>::default(),
+        }
+    }
+}
+
 impl<'a, T> Iterator for ParsingLineIterator<'a, T>
 where
     T: FromStr,
