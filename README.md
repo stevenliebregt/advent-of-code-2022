@@ -20,7 +20,7 @@ The timings are gathered on a system containing an 11th gen Intel i9 CPU with 32
 | 08 | 0.264 | 0.219 |
 | 09 | 0.350 | 0.462 |
 | 10 | 0.002 | 0.002 |
-| 11 |  |  |
+| 11 | 0.013 | 4.835 |
 | 12 |  |  |
 | 13 |  |  |
 | 14 |  |  |
