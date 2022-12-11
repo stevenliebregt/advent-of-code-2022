@@ -28,6 +28,7 @@ where
 {
     register: i32,
     instructions: ParsingLineIterator<'input, Instruction>,
+    current_cycle: i32,
     output_device: &'output mut O,
 }
 
@@ -40,6 +41,7 @@ where
             // During first cycle register X is 1
             register: 1,
             instructions: line_iterator.into(),
+            current_cycle: 1,
             output_device,
         }
     }
@@ -47,9 +49,17 @@ where
     pub fn process(mut self) {
         for instruction in self.instructions {
             match instruction {
-                NoOp => self.output_device.handle_noop(self.register),
+                NoOp => {
+                    self.output_device
+                        .handle_noop(self.register, self.current_cycle);
+                    self.current_cycle += 1
+                }
                 AddX(value) => {
-                    self.output_device.handle_addx(self.register);
+                    for _ in 0..2 {
+                        self.output_device
+                            .handle_addx_once(self.register, self.current_cycle);
+                        self.current_cycle += 1;
+                    }
 
                     self.register += value;
                 }
@@ -59,38 +69,35 @@ where
 }
 
 trait OutputDevice {
-    fn handle_noop(&mut self, register: i32);
+    fn handle_noop(&mut self, register: i32, current_cycle: i32);
 
-    fn handle_addx(&mut self, register: i32);
+    fn handle_addx_once(&mut self, register: i32, current_cycle: i32);
 }
 
 #[derive(Debug)]
 struct SignalOutputDevice {
-    cycles: Vec<i32>,
-}
-
-impl SignalOutputDevice {
-    pub fn get_signal_strengths(&self) -> impl Iterator<Item = i32> + '_ {
-        SIGNAL_CYCLES
-            .iter()
-            .map(|&cycle| cycle * self.cycles[cycle as usize])
-    }
+    signal_strength_sum: i32,
 }
 
 impl Default for SignalOutputDevice {
     fn default() -> Self {
-        Self { cycles: vec![1] }
+        Self {
+            signal_strength_sum: 0,
+        }
     }
 }
 
 impl OutputDevice for SignalOutputDevice {
-    fn handle_noop(&mut self, register: i32) {
-        self.cycles.push(register);
+    fn handle_noop(&mut self, register: i32, current_cycle: i32) {
+        if current_cycle % 40 == 20 {
+            self.signal_strength_sum += current_cycle * register;
+        }
     }
 
-    fn handle_addx(&mut self, register: i32) {
-        self.cycles.push(register);
-        self.cycles.push(register);
+    fn handle_addx_once(&mut self, register: i32, current_cycle: i32) {
+        if current_cycle % 40 == 20 {
+            self.signal_strength_sum += current_cycle * register;
+        }
     }
 }
 
@@ -102,19 +109,18 @@ pub fn solve_part_1(input: &str) -> i32 {
         CommunicationDevice::new(LineIterator::from(input), &mut signal_output_device);
     communication_device.process();
 
-    signal_output_device.get_signal_strengths().sum::<i32>()
+    signal_output_device.signal_strength_sum
 }
 
 #[derive(Debug)]
 struct CrtOutputDevice {
-    current_cycle: i32,
     crt: String,
 }
 
 impl CrtOutputDevice {
-    fn write_to_crt(&mut self, register: i32) {
+    fn write_to_crt(&mut self, register: i32, current_cycle: i32) {
         // Used to wrap to 40 columns
-        let cycle = (self.current_cycle - 1) % 40;
+        let cycle = (current_cycle - 1) % 40;
 
         if [cycle - 1, cycle, cycle + 1].contains(&register) {
             self.crt.push('#');
@@ -141,24 +147,17 @@ impl Default for CrtOutputDevice {
         let mut crt = String::with_capacity(240 + (240 / 40));
         crt.push('\n');
 
-        Self {
-            current_cycle: 1,
-            crt,
-        }
+        Self { crt }
     }
 }
 
 impl OutputDevice for CrtOutputDevice {
-    fn handle_noop(&mut self, register: i32) {
-        self.write_to_crt(register);
-        self.current_cycle += 1;
+    fn handle_noop(&mut self, register: i32, current_cycle: i32) {
+        self.write_to_crt(register, current_cycle);
     }
 
-    fn handle_addx(&mut self, register: i32) {
-        for _ in 0..2 {
-            self.write_to_crt(register);
-            self.current_cycle += 1;
-        }
+    fn handle_addx_once(&mut self, register: i32, current_cycle: i32) {
+        self.write_to_crt(register, current_cycle);
     }
 }
 
