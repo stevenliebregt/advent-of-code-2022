@@ -5,7 +5,7 @@ version = 3
 [[package]]
 name = "advent-of-code-helpers"
 version = "0.1.0"
-source = "git+https://github.com/stevenliebregt/advent-of-code-helpers#cf94ddca691f63b42f5ca6f547795d63a24de5bb"
+source = "git+https://github.com/stevenliebregt/advent-of-code-helpers#b6e9c974287a170e9d3f44fc95c878458fbf06f7"
 
 [[package]]
 name = "aho-corasick"
@@ -124,15 +124,15 @@ checksum = "4501abdff3ae82a1c1b477a17252eb69cee9e66eb915c1abaa4f44d873df9f09"
 
 [[package]]
 name = "serde"
-version = "1.0.148"
+version = "1.0.150"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e53f64bb4ba0191d6d0676e1b141ca55047d83b74f5607e6d8eb88126c52c2dc"
+checksum = "e326c9ec8042f1b5da33252c8a37e9ffbd2c9bef0155215b6e6c80c790e05f91"
 
 [[package]]
 name = "serde_derive"
-version = "1.0.148"
+version = "1.0.150"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a55492425aa53521babf6137309e7d34c20bbfbbfcfe2c7f3a047fd1f6b92c0c"
+checksum = "42a3df25b0713732468deadad63ab9da1f1fd75a48a15024b50363f128db627e"
 dependencies = [
  "proc-macro2",
  "quote",
