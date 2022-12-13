@@ -1,0 +1,3 @@
+int = { '0'..'9'+ }
+int_or_list = _{ (int | list) }
+list = { "[" ~ int_or_list* ~ ("," ~ int_or_list )* ~ "]" }
