@@ -11,7 +11,7 @@ type Output = usize;
 #[grammar = "resources/day_13.pest"]
 pub struct PacketParser;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum Packet {
     Int(u64),
     List(Vec<Packet>),
@@ -22,6 +22,8 @@ impl PartialEq for Packet {
         self.partial_cmp(other) == Some(Ordering::Equal)
     }
 }
+
+impl Eq for Packet {}
 
 impl PartialOrd for Packet {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
@@ -52,11 +54,17 @@ impl PartialOrd for Packet {
     }
 }
 
+impl Ord for Packet {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.partial_cmp(other).unwrap()
+    }
+}
+
 fn pest_int_to_u64(pest_int: Pair<Rule>) -> u64 {
     pest_int.as_span().as_str().parse::<u64>().unwrap()
 }
 
-fn pest_list_to_packet(mut pest_list: Pair<Rule>) -> Packet {
+fn pest_list_to_packet(pest_list: Pair<Rule>) -> Packet {
     let mut list: Vec<Packet> = vec![];
 
     for child in pest_list.into_inner() {
@@ -70,6 +78,15 @@ fn pest_list_to_packet(mut pest_list: Pair<Rule>) -> Packet {
     Packet::List(list)
 }
 
+fn parse_line_as_list(line: &str) -> Packet {
+    pest_list_to_packet(
+        PacketParser::parse(Rule::list, line)
+            .unwrap()
+            .next()
+            .unwrap(),
+    )
+}
+
 #[aoc(day13, part1)]
 pub fn solve_part_1(input: &str) -> Output {
     let mut line_iterator = LineIterator::from(input);
@@ -80,18 +97,8 @@ pub fn solve_part_1(input: &str) -> Output {
     while let Some(line_left) = line_iterator.next() {
         let line_right = line_iterator.next().unwrap();
 
-        let left = pest_list_to_packet(
-            PacketParser::parse(Rule::list, line_left)
-                .unwrap()
-                .next()
-                .unwrap(),
-        );
-        let right = pest_list_to_packet(
-            PacketParser::parse(Rule::list, line_right)
-                .unwrap()
-                .next()
-                .unwrap(),
-        );
+        let left = parse_line_as_list(line_left);
+        let right = parse_line_as_list(line_right);
 
         if left < right {
             ordered_count += index;
@@ -110,7 +117,35 @@ pub fn solve_part_1(input: &str) -> Output {
 
 #[aoc(day13, part2)]
 pub fn solve_part_2(input: &str) -> Output {
-    todo!("Implement part 2")
+    // TODO: Extend ParsingLineIterator to skip empty lines
+    let mut packets: Vec<Packet> = vec![];
+
+    for line in LineIterator::from(input) {
+        if line.is_empty() {
+            continue;
+        }
+
+        packets.push(parse_line_as_list(line));
+    }
+
+    // Push dividers
+    let divider_a = Packet::List(vec![Packet::List(vec![Packet::Int(2)])]);
+    packets.push(divider_a.clone());
+    let divider_b = Packet::List(vec![Packet::List(vec![Packet::Int(6)])]);
+    packets.push(divider_b.clone());
+
+    packets.sort();
+
+    let index_divider_a = packets
+        .iter()
+        .position(|packet| packet == &divider_a)
+        .unwrap();
+    let index_divider_b = packets
+        .iter()
+        .position(|packet| packet == &divider_b)
+        .unwrap();
+
+    (index_divider_a + 1) * (index_divider_b + 1)
 }
 
 #[cfg(test)]
@@ -152,7 +187,7 @@ mod tests {
 
     #[test]
     fn test_part_2() {
-        let expected = 1;
+        let expected = 140;
 
         assert_eq!(expected, solve_part_2(INPUT.trim()));
     }
