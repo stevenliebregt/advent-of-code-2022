@@ -5,7 +5,7 @@ version = 3
 [[package]]
 name = "advent-of-code-helpers"
 version = "0.1.0"
-source = "git+https://github.com/stevenliebregt/advent-of-code-helpers#b6e9c974287a170e9d3f44fc95c878458fbf06f7"
+source = "git+https://github.com/stevenliebregt/advent-of-code-helpers#48bb668665918978db8d4ffa61e83f1a169cb8d1"
 
 [[package]]
 name = "aho-corasick"
