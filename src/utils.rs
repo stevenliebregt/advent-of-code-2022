@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 use std::marker::PhantomData;
+use std::ops::{Add, Sub};
 use std::str::FromStr;
 
 pub enum TrimMode {
@@ -107,5 +108,123 @@ where
         }
 
         None
+    }
+}
+
+#[derive(Default, Copy, Clone, Eq, PartialEq, Debug)]
+pub struct Coordinate {
+    x: isize,
+    y: isize,
+}
+
+impl Coordinate {
+    pub fn new(x: isize, y: isize) -> Self {
+        Self { x, y }
+    }
+
+    pub fn x(&self) -> isize {
+        self.x
+    }
+
+    pub fn y(&self) -> isize {
+        self.y
+    }
+
+    pub fn set_x(&mut self, new_x: isize) {
+        self.x = new_x
+    }
+
+    pub fn set_y(&mut self, new_y: isize) {
+        self.y = new_y
+    }
+}
+
+impl Sub<(isize, isize)> for Coordinate {
+    type Output = Self;
+
+    fn sub(self, rhs: (isize, isize)) -> Self::Output {
+        Self {
+            x: self.x - rhs.0,
+            y: self.y - rhs.1,
+        }
+    }
+}
+
+impl Add<(isize, isize)> for Coordinate {
+    type Output = Self;
+
+    fn add(self, rhs: (isize, isize)) -> Self::Output {
+        Self {
+            x: self.x + rhs.0,
+            y: self.y + rhs.1,
+        }
+    }
+}
+
+impl FromStr for Coordinate {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let split = s.split_once(',').unwrap();
+
+        Ok(Self {
+            x: split.0.parse().unwrap(),
+            y: split.1.parse().unwrap(),
+        })
+    }
+}
+
+impl From<(isize, isize)> for Coordinate {
+    fn from(value: (isize, isize)) -> Self {
+        Self {
+            x: value.0,
+            y: value.1
+        }
+    }
+}
+
+pub fn manhattan_distance(source: &Coordinate, target: &Coordinate) -> isize {
+    let x = (source.x() - target.x()).abs();
+    let y = (source.y() - target.y()).abs();
+
+    x + y
+}
+
+pub fn diamond_x_bounds(
+    coordinate: Coordinate,
+    radius: usize,
+    vertical_distance_from_center: usize,
+) -> (isize, isize) {
+    let modifier = radius as isize - vertical_distance_from_center as isize;
+
+    (coordinate.x() - modifier, coordinate.x() + modifier)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Imagine a diamond that looks like this, with radius 5 at (0, 0)
+    ///
+    /// ```txt
+    ///      #
+    ///     ###
+    ///    #####
+    ///   #######
+    ///  #########
+    /// #####X#####
+    ///  #########
+    ///   #######
+    ///    #####
+    ///     ###
+    ///      #
+    /// ```
+    #[test]
+    fn test_diamond_bounds() {
+        let coordinate = Coordinate::new(0, 0);
+        let radius = 5;
+
+        // We then should get that 3 up the x coordinates would be -2 and 2
+        assert_eq!((-2, 2), diamond_x_bounds(coordinate, radius, 3));
     }
 }
